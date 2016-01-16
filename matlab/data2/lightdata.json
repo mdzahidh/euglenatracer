@@ -1,0 +1,74 @@
+{
+    "metaData": {
+        "tag": "light 100",
+        "description": "Testing light at 1000 for 40 sec and 30 secs of darkness at the beginning and at the end",
+        "runTime": 220000,
+        "magnification": 10,
+        "expTypeString": "isArray"
+    },
+    "eventsToRun": [
+        {
+            "topValue": 0,
+            "rightValue": 0,
+            "bottomValue": 0,
+            "leftValue": 0,
+            "time": 1452133470164,
+            "setTime": 6,
+            "askTime": 0
+        },
+        {
+            "topValue": 100,
+            "rightValue": 0,
+            "bottomValue": 0,
+            "leftValue": 0,
+            "time": 1452133500159,
+            "setTime": 30002,
+            "askTime": 30000
+        },
+        {
+            "topValue": 0,
+            "rightValue": 100,
+            "bottomValue": 0,
+            "leftValue": 0,
+            "time": 1452133540160,
+            "setTime": 70003,
+            "askTime": 70000
+        },
+        {
+            "topValue": 0,
+            "rightValue": 0,
+            "bottomValue": 100,
+            "leftValue": 0,
+            "time": 1452133580161,
+            "setTime": 110004,
+            "askTime": 110000
+        },
+        {
+            "topValue": 0,
+            "rightValue": 0,
+            "bottomValue": 0,
+            "leftValue": 100,
+            "time": 1452133620159,
+            "setTime": 150002,
+            "askTime": 150000
+        },
+        {
+            "topValue": 0,
+            "rightValue": 0,
+            "bottomValue": 0,
+            "leftValue": 0,
+            "time": 1452133660160,
+            "setTime": 190003,
+            "askTime": 190000
+        },
+        {
+            "topValue": 0,
+            "rightValue": 0,
+            "bottomValue": 0,
+            "leftValue": 0,
+            "time": 1452133690162,
+            "setTime": 220005,
+            "askTime": 220000
+        }
+    ]
+}

@@ -1,0 +1,20 @@
+../filter --nice
+ -- flags in options / arguments
+    Flags in first argument in [flags]
+
+    x or X in arg 1       = 0
+    c, C, k or K in arg 1 = 0
+    a,b, or c in options  = 0
+
+ -- search(), next() and follow()
+
+    found "--rudimental" = 0
+    followed by -1 and -1
+    rudimental = nothing -1
+
+ -- variables in section [user-variables]
+
+
+ -- pseudo function call feature
+
+
