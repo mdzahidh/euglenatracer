@@ -101,7 +101,7 @@ classdef EuglenaTracks < handle
            end
            
            totalFrames = maxFrame - minFrame + 1;
-           M = uint8(zeros(480,640,3,totalFrames));
+           M = uint8(zeros(480,640,3,totalFrames,'uint8'));
            sampleIdx = int32(zeros(length(tracks),totalFrames));
            
            for i = 1:length(tracks)
@@ -217,20 +217,21 @@ classdef EuglenaTracks < handle
        
        function loadAllVideoFrames(this)            
             moviePath = strcat(this.path,'movie.mp4');
-            v = VideoReader(moviePath);
-            textprogressbar('Loading all video frames: ');
-            
-%            this.videoFrames = cell(this.numFrames,1);
-%             i = 1;
-%             while hasFrame(v)
-%                 this.videoFrames{i} = readFrame(v);
-%                 i = i + 1;
-%                 textprogressbar(i / this.getNumFrames() * 100.0);
-%             end
-
-            this.videoFrames = uint8(zeros(480,640,3,this.getNumFrames()));
-            this.videoFrames = read(v,[1,this.getNumFrames()]);            
-            textprogressbar('Done');
+%             v = VideoReader(moviePath);
+%             textprogressbar('Loading all video frames: ');
+%             
+% %            this.videoFrames = cell(this.numFrames,1);
+% %             i = 1;
+% %             while hasFrame(v)
+% %                 this.videoFrames{i} = readFrame(v);
+% %                 i = i + 1;
+% %                 textprogressbar(i / this.getNumFrames() * 100.0);
+% %             end
+% 
+%             this.videoFrames = uint8(zeros(480,640,3,this.getNumFrames()));
+%             this.videoFrames = read(v,[1,this.getNumFrames()]);            
+%             textprogressbar('Done');
+             this.videoFrames = readvid(moviePath);
        end
        
        function f = getVideoFrame(this,i)
@@ -280,9 +281,8 @@ classdef EuglenaTracks < handle
             this.totalTime = single(this.lightData{end}.time - this.lightData{1}.time) / 1000.0;
                         
                                     
-            moviePath = strcat(path,'movie.mp4');
-            v = VideoReader(moviePath);
-            this.numFrames = v.NumberOfFrames;            
+            moviePath = strcat(path,'movie.mp4');            
+            this.numFrames = numvidframes(moviePath);         
             this.fps = this.numFrames / this.totalTime
                         
             cachePath = strcat(path,sprintf('cache_%d.mat',threshold));
@@ -395,16 +395,18 @@ classdef EuglenaTracks < handle
        
        function M = movieLoad(this)
            if isempty(this.thresholdedMovieCache)
-               v = VideoReader(this.thresholdMoviePath);
-               this.thresholdedMovieCache = read(v,[1,v.NumberOfFrames]);               
+%                v = VideoReader(this.thresholdMoviePath);
+%                this.thresholdedMovieCache = read(v,[1,v.NumberOfFrames]);
+                this.thresholdedMovieCache = readvid(this.thresholdMoviePath);
            end
            M = this.thresholdedMovieCache;
        end
        
        function M = movieDebugLoad(this)
            if isempty(this.fullMovieCache)
-               v = VideoReader(this.fullMoviePath);
-               this.fullMovieCache = read(v,[1,v.NumberOfFrames]);               
+%                v = VideoReader(this.fullMoviePath);
+%                this.fullMovieCache = read(v,[1,v.NumberOfFrames]);
+                this.fullMovieCache = readvid(this.fullMoviePath);
            end
            M = this.fullMovieCache;
        end
@@ -497,7 +499,7 @@ classdef EuglenaTracks < handle
            textprogressbar('Creating debug movie: ');
            
            totalFrames = endFrame - startFrame + 1;           
-           M = uint8(zeros(480,640,3,totalFrames));           
+           M = uint8(zeros(480,640,3,totalFrames,'uint8'));           
            
            startFrame = max(startFrame,1);
            endFrame   = min(endFrame, this.getNumFrames());

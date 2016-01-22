@@ -13,25 +13,35 @@ elseif isunix
 %            '-lavresample ', '-lswscale ', '-lavformat ', '-lavcodec ', '-lswresample ', '-lavutil ', ...
 %            '-llibjasper ', ...
 %            '-lippicv ', '-lzlib ', '-llibpng ', '-llibjpeg ', '-llibtiff ', '-ldl '];
-    LIBS= {'-lopencv_videoio ', '-lopencv_highgui ', ...
+    LIBS= ['LINKLIBS=$LINKLIBS ','-lopencv_videoio ', '-lopencv_highgui ', ...
            '-lopencv_imgcodecs ', '-lopencv_imgproc ', '-lopencv_video ', '-lopencv_videostab ', '-lopencv_core ', '-lopencv_hal ', ...
            '-lavresample ', '-lswscale ', '-lavformat ', '-lavcodec ', '-lswresample ', '-lavutil ', ...
-           '-lippicv ', '-lzlib ', '-llibpng ', '-llibjpeg ', '-llibtiff ', '-ldl ', ...
-           '-lpthread','-ldc1394'};
+           '-llibjasper ', ...
+           '-lippicv ', '-lzlib ', '-llibpng ', '-llibjpeg ', '-llibtiff ', '-ldl '];
 elseif ispc
 %     LIBS= ['-lopencv_videoio310 ', '-lopencv_highgui310 ', ...
 %            '-lopencv_imgcodecs310 ', '-lopencv_imgproc310 ', '-lopencv_video310 ', '-lopencv_videostab310 ', '-lopencv_core310 ', '-lopencv_hal310 '];
 %
     LIBS= ['-lopencv_videoio310 ', '-lopencv_highgui310 '];
 end
-
-if isunix
+if ismac
     CXXFLAGS = ['CXXFLAGS=\$CXXFLAGS ', '-std=c++0x ', '-Dinline=__inline '];
     %LDFLAGS  = ['LDFLAGS=$LDFLAGS'];
     INCPATH  = [{'-I../'}, {'-I../local/include'}, {'-I../munkres-cpp/src'},{'-I/usr/local/include'}];
     LIBPATH  = [{'-L../local/lib'}, {'-L../opencv/build/3rdparty/lib'}, {'-L../local/share/OpenCV/3rdparty/lib'}, {'-L/usr/local/lib'}];
     SRC      = [{'euglena.cpp'},{'../tracker.cpp'},{'../intersection.cpp'}];
-    mex('-v', LIBS{:}, CXXFLAGS, INCPATH{:}, LIBPATH{:}, SRC{:});
+    mex('-v', LIBS, CXXFLAGS, INCPATH{:}, LIBPATH{:}, SRC{:});
+    mex('-v', LIBS, CXXFLAGS, INCPATH{:}, LIBPATH{:}, 'readvid.cpp');
+    mex('-v', LIBS, CXXFLAGS, INCPATH{:}, LIBPATH{:}, 'numvidframes.cpp');
+elseif isunix
+    CXXFLAGS = ['CXXFLAGS=$CXXFLAGS ', '-std=c++11 '];
+    LDFLAGS  = ['LDFLAGS=$LDFLAGS'];
+    INCPATH  = [{'-I../'}, {'-I../local/include'}, {'-I../munkres-cpp/src'},{'-I/usr/local/include'}];
+    LIBPATH  = [{'-L../local/lib'}, {'-L../opencv/build/3rdparty/lib'}, {'-L../local/share/OpenCV/3rdparty/lib'}, {'-L/usr/local/lib'}];
+    SRC      = [{'euglena.cpp'},{'../tracker.cpp'},{'../intersection.cpp'},{'../munkres-cpp/src/munkres.cpp'}];
+    mex('-v', LIBS, LDFLAGS, CXXFLAGS, INCPATH{:}, LIBPATH{:}, SRC{:});
+    mex('-v', LIBS, LDFLAGS, CXXFLAGS, INCPATH{:}, LIBPATH{:}, 'readvid.cpp');
+    mex('-v', LIBS, LDFLAGS, CXXFLAGS, INCPATH{:}, LIBPATH{:}, 'numvidframes.cpp');
 elseif ispc
     CXXFLAGS = ['-DWIN32'];
     LDFLAGS  = ['LDFLAGS=$LDFLAGS'];
