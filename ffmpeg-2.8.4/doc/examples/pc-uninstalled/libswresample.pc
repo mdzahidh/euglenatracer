@@ -8,5 +8,5 @@ Description: FFmpeg audio resampling library
 Version: 1.2.101
 Requires: libavutil >= 54.31.100
 Conflicts:
-Libs: -L${libdir} -Wl,-rpath,${libdir} -lswresample 
+Libs: -L${libdir} -Wl,-rpath,${libdir} -lswresample -lm
 Cflags: -I${includedir}

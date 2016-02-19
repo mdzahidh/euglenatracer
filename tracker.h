@@ -286,8 +286,8 @@ public:
     {
         _trackId = _trackCount++;
         _samples.push_back(TrackSample(head,startFrame));
-        //_color = cv::Scalar(rand()%256,rand()%256,rand()%256,255);
-        _color = _COLORS[_trackId % 11];
+        _color = cv::Scalar(rand()%256,rand()%256,rand()%256,255);
+        //_color = _COLORS[_trackId % 11];
     }
     int getNumSamples(){ return _samples.size();}
     const cv::RotatedRect& getHeadRect() const { return _samples[_samples.size()-1]._rect;}
@@ -528,9 +528,9 @@ public:
         _trackMgr.track(_euglenas,frameN, _lengthScaleFactor);
     }
 
-    void drawVis(cv::Mat &out, int frameN )
+    void drawVis(cv::Mat &out, int frameN, int threshold = 0 )
     {
-        drawTracks(out,_trackMgr.getLiveTracks(),frameN);
+        drawTracks(out,_trackMgr.getLiveTracks(),frameN, threshold);
         //drawEuglena(out, _euglenas);
     }
 
@@ -573,7 +573,7 @@ public:
         }
     }
 
-    static void drawTracks( cv::Mat &im, const std::vector< Track > &tracks, int frame )
+    static void drawTracks( cv::Mat &im, const std::vector< Track > &tracks, int frame, int threshold = 0 )
     {
 
         //im.setTo(cv::Scalar(255,255,255));
@@ -589,13 +589,13 @@ public:
 //                   track._trackId == 1512 ||
 //                   track._trackId == 1353) ) continue ;
 
-            if (track._samples.size() > 5 ){
+            if (track._samples.size() > threshold ){
                 for(int i = track._samples.size()-1;i>=1 && (track._samples.size() - i) < 10000;--i){
                     float frac  = std::min( (track._samples.size() - i)/10.0f, 1.0f );
-                    int thickness = round((1.0-frac) * 5.0 + frac * 1.0);
+//                    int thickness = round((1.0-frac) * 5.0 + frac * 1.0);
 //                  int thickness = round((1.0-frac) * 5.0 + frac * 1.0);
 //                  int thickness =  2.0;
-//                    int thickness = 1.0;
+                    int thickness = 1.0;
                     cv::line(im,track._samples[i]._rect.center,track._samples[i-1]._rect.center,
                             track._color,
                             thickness
@@ -604,11 +604,11 @@ public:
                 const State& predictedState = track.getPredictedState();
 //                drawBox(im,track.getPredictedPosition(),track._color,1);
                 cv::line(im,predictedState._pos,predictedState._pos + predictedState._velocity*10,cv::Scalar(0,0,0,255),1,8);
-                drawBox(im,track.getHeadRect(),track._color,2);
+                drawBox(im,track.getHeadRect(),track._color,1);
                 std::stringstream ss;
 //                ss << track._debugId;
                 ss << track._trackId;
-                cv::putText(im,ss.str(),track.getHeadRect().center,cv::FONT_HERSHEY_SCRIPT_SIMPLEX,0.5,cv::Scalar(0,0,0,0),2,8);
+                cv::putText(im,ss.str(),track.getHeadRect().center,cv::FONT_HERSHEY_SCRIPT_SIMPLEX,0.5,cv::Scalar(255,255,255,255),1,8);
             }
         }
     }

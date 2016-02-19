@@ -98,6 +98,8 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${UNIXFLAGS}")
 
 message(${OpenCV_LIBRARIES})
 
-add_executable(euglena tracker.h tracker.cpp intersection.cpp intersection.h euglena.cpp)
+include_directories(jsoncpp/dist/json)
+add_executable(euglena tracker.h tracker.cpp intersection.cpp intersection.h euglena.cpp jsoncpp/dist/jsoncpp.cpp jsoncpp/dist/json/json.h jsoncpp/dist/json/json-forwards.h )
+
 target_link_libraries(euglena ${OpenCV_LIBRARIES} ${EXTRA_LIBS})
 install (TARGETS euglena DESTINATION bin)

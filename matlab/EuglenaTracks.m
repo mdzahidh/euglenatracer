@@ -179,6 +179,8 @@ classdef EuglenaTracks < handle
            end
            textprogressbar('Done');
        end
+              
+       
        function J = annotateImage( this, frame, I )
            
             leds = this.getLedStatesFromFrame( frame );
@@ -213,6 +215,15 @@ classdef EuglenaTracks < handle
             loc = [640 - int32(w) - 30,480-40];
             J = this.insertText(J,loc,'100um');
 
+            [a,r]  = this.computeJoystickPositionFromLEDs(leds);
+            DIAL_RAD = 80; 
+            c_x = 640-DIAL_RAD;
+            c_y = DIAL_RAD;
+            hand_x = DIAL_RAD * r * cos(a) + c_x;
+            hand_y = DIAL_RAD * r * sin(a) + c_y;
+            J = this.insertShape(J,'circle',[c_x,c_y,DIAL_RAD;hand_x,hand_y,DIAL_RAD/10.0],'LineWidth',5,'Color','White','Opacity',0.6);
+            
+            J = this.insertShape(J,'line',[c_x,c_y,hand_x,hand_y],'LineWidth',5,'Color','White','Opacity',0.6);            
        end
        
        function loadAllVideoFrames(this)            
@@ -519,6 +530,27 @@ classdef EuglenaTracks < handle
     
    methods(Static)
        
+       function [angle,r] = computeJoystickPositionFromLEDs(leds)
+            y = max(leds(1),leds(3));
+            
+            if leds(3) < leds(1)
+               y = -y;
+            end
+
+            x = max(leds(2),leds(4));
+            if leds(4) > leds(2)
+                x = -x;
+            end
+
+            y = y / 100.0;
+            x = x / 100.0;
+
+            angle = atan2(y,x);
+            if angle < 0
+                angle = 2*pi + angle;
+            end
+            r =  sqrt( x*x + y*y);
+       end
        
        function drawPoints( points )
            points(:,end+1) = points(:,1);
