@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <iostream>
+#include <memory>
+
 //#include <unistd.h>
 //#include <sys/stat.h>
 
@@ -268,6 +270,7 @@ int processTrackedVideo(GetPot &cl, std::string &folder, int threshold )
         }
         progressBar( nFrame / totalFrames );
     }
+    tracker._trackMgr.writeToJSONFile(folder+"tracks.json", threshold);
     return 0;
 }
 

@@ -1,5 +1,5 @@
 command -v cmake >/dev/null 2>&1 || { echo >&2 "Please install cmake before running this script.  Aborting."; exit 1; }
-
+command -v yasm  >/dev/null 2>&1 || { echo >&2 "Please install yasm before running this script.  Aborting."; exit 1; }
 ######################## Build FFMPEG ##########################################
 
 OSX_SDK_VERSION="10.9"
