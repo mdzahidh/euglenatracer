@@ -451,7 +451,7 @@ public:
                 ss << ",\n";
             }
             else if(allTracks.size() > 0 ){
-                ss << ",\n";
+                ss << "\n";
             }
         }
 
