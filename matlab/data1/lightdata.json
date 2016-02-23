@@ -3,7 +3,8 @@
         "tag": "isLive",
         "description": "",
         "magnification": 10,
-        "expTypeString": "isLive"
+        "expTypeString": "isLive",
+        "numFrames": 493
     },
     "eventsToRun": [
         {
