@@ -4,7 +4,8 @@ import sys
 import os
 import json
 import copy
-
+import csv
+import numpy as np
 
 def warning(*objs):
     print("WARNING: ", *objs, file=sys.stderr)
@@ -131,3 +132,26 @@ class EuglenaData(object):
     def extractTrackData(track):
         # returns x,y,w,h,a,f
         return zip(*[(s['rect'][0], s['rect'][1], s['rect'][2], s['rect'][3], s['rect'][4], s['frame']) for s in track['samples'] ])
+
+    def writeTrackDataToCSV(self,track,csvfile):
+        x,y,w,h,a,f = np.array(EuglenaData.extractTrackData(track))
+
+        x *= self.getUMPP()
+        y *= self.getUMPP()
+        w *= self.getUMPP()
+        h *= self.getUMPP()
+
+        t = f / self.getFPS()
+
+        ledStates = [self.getLedStateFromFrame(fr) for fr in f]
+
+        with open(csvfile,'wb') as fb:
+            header = ('frame#','time (sec)','center_x (um)','center_y (um)','width (um)','height (um)','angle (degrees)','topLED','rightLED','bottomLED','leftLED')
+            wr = csv.writer(fb)
+            rows = zip(f,t,x,y,w,h,a)
+            wr.writerow(header)
+            for i,r in enumerate(rows):
+                data = list(r)
+                data.extend(ledStates[i])
+                print(data)
+                wr.writerow(data)

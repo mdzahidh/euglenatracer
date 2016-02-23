@@ -13,6 +13,8 @@ print [t['trackID'] for t in tracks]
 print e.getTrackAt(0)['trackID']
 singleTrack = e.getTrackByID(90)
 print singleTrack
+e.writeTrackDataToCSV(singleTrack,'track90.csv')
+
 x,y,w,h,a,f = e.extractEuglenaBetweenFrames(100,200)
 print "Number of euglenas between 100 and 200: ", len(x)
 leds = e.getLedStateFromTime(45)
