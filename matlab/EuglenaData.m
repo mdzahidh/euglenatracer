@@ -105,7 +105,7 @@ classdef EuglenaData < handle
            track = this.getTrackAt(idx);
        end
        
-       function [x,y,width,height,angles,frames] = extractEuglenaFromFrames( this, startFrame, endFrame )
+       function [x,y,width,height,angles,frames] = extractEuglenaBetweenFrames( this, startFrame, endFrame )
            
            x      = [];
            y      = [];
