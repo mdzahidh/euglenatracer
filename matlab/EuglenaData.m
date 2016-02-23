@@ -25,6 +25,16 @@ classdef EuglenaData < handle
             str = char(raw');
             fclose(fid);
             this.tracks = fromjson(str);
+            
+            % Fixing 0 based indexing into 1 based
+            for i=1:length(this.tracks)                                
+                this.tracks{i}.startFrame = this.tracks{i}.startFrame  + 1;
+                this.tracks{i}.lastFrame = this.tracks{i}.lastFrame  + 1;                   
+                for j=1:this.tracks{i}.numSamples
+                    this.tracks{i}.samples{j}.frame = this.tracks{i}.samples{j}.frame + 1;
+                end
+            end
+                
                         
             lightDataPath = strcat(path,'lightdata.json');            
             fid = fopen(lightDataPath);
@@ -152,7 +162,30 @@ classdef EuglenaData < handle
        end 
       
        function leds = getLedStatesFromFrame( this, frame )
-           leds =  this.getLedStatesFromTime( (single(frame)-1) * 1.0/this.getFPS() );
+           leds =  this.getLedStatesFromTime( (single(frame)) * 1.0/this.getFPS() );
+       end
+       
+       function writeTrackDataToCSV(this, track, csvfile)
+           [x,y,w,h,a,f] = EuglenaData.extractTrackData(track);
+           x = x * this.getUMPP();
+           y = y * this.getUMPP();
+           w = w * this.getUMPP();
+           h = h * this.getUMPP();
+           header = {'frame#','time (sec)','center_x (um)','center_y (um)','width (um)','height (um)','angle (degrees)','topLED','rightLED','bottomLED','leftLED'}
+           M = length(x);
+           data = zeros(M,length(header));
+           data(:,1) = f;
+           data(:,2) = f / this.getFPS();
+           data(:,3) = x;
+           data(:,4) = y;
+           data(:,5) = w;
+           data(:,6) = h;
+           data(:,7) = a;           
+           for i=1:length(f)
+               leds = this.getLedStatesFromFrame(f(i))
+               data(i,end-3:end) = leds;
+           end           
+           csvwrite_with_headers(csvfile,data,header);
        end
    end
    
@@ -218,7 +251,6 @@ classdef EuglenaData < handle
                angles(i)   = rect{5};
                frames(i)   = s.frame;
            end
-       end
-       
+       end                    
    end
 end
