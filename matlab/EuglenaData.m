@@ -59,7 +59,7 @@ classdef EuglenaData < handle
             this.timeTable = int32(zeros(length(this.tracks), 4 ));
             
             for i = 1:length(this.tracks)   
-                this.timeTable(i,:) = [this.tracks{i}.trackID, this.tracks{i}.startFrame+1, this.tracks{i}.lastFrame+1, this.tracks{i}.numSamples];
+                this.timeTable(i,:) = [this.tracks{i}.trackID, this.tracks{i}.startFrame, this.tracks{i}.lastFrame, this.tracks{i}.numSamples];
             end            
             this.trackID2IndexMap = containers.Map( this.timeTable(:,1), 1:length(this.tracks) );
             
@@ -171,7 +171,7 @@ classdef EuglenaData < handle
            y = y * this.getUMPP();
            w = w * this.getUMPP();
            h = h * this.getUMPP();
-           header = {'frame#','time (sec)','center_x (um)','center_y (um)','width (um)','height (um)','angle (degrees)','topLED','rightLED','bottomLED','leftLED'}
+           header = {'frame#','time (sec)','center_x (um)','center_y (um)','width (um)','height (um)','angle (degrees)','topLED','rightLED','bottomLED','leftLED'};
            M = length(x);
            data = zeros(M,length(header));
            data(:,1) = f;
@@ -182,7 +182,7 @@ classdef EuglenaData < handle
            data(:,6) = h;
            data(:,7) = a;           
            for i=1:length(f)
-               leds = this.getLedStatesFromFrame(f(i))
+               leds = this.getLedStatesFromFrame(f(i));
                data(i,end-3:end) = leds;
            end           
            csvwrite_with_headers(csvfile,data,header);
@@ -198,9 +198,9 @@ classdef EuglenaData < handle
                tracks = {tracks};
            end
            
-           for i = 1:length(tracks)
+           for i = 1:length(tracks)               
                t = tracks{i};
-               if t.startFrame > endFrame || t.lastFrame < startFrame 
+               if t.startFrame > endFrame || t.lastFrame < startFrame                   
                    %completely outside, so just ignore                   
                elseif t.startFrame >= startFrame && t.lastFrame <= endFrame
                    %completely inside, so just take the whole thing
@@ -224,7 +224,12 @@ classdef EuglenaData < handle
                    if ~isempty(clippedTrack.samples) 
                        clippedTrack.startFrame = minFrame;
                        clippedTrack.lastFrame = maxFrame;
-                       clippedTrack.numSamples = length(clippedTrack.samples);
+                       clippedTrack.numSamples = length(clippedTrack.samples);                       
+                       allClippedTracks{end+1} = clippedTrack;
+                   else
+                       clippedTrack.startFrame = -1;
+                       clippedTrack.lastFrame = -1;
+                       clippedTrack.numSamples = 0;
                        allClippedTracks{end+1} = clippedTrack;
                    end
                end

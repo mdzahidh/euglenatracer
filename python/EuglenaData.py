@@ -93,7 +93,7 @@ class EuglenaData(object):
                     a.append(rect[4])
                     f.append(s['frame'])
 
-        return x,y,w,h,a,f
+        return np.array(x,y,w,h,a,f)
 
     def getLedStateFromTime(self,t):
         i = 0
@@ -102,9 +102,9 @@ class EuglenaData(object):
 
         i -= 1
         if i >= 0:
-            return self._events[i]['topValue'], self._events[i]['rightValue'], self._events[i]['bottomValue'], self._events[i]['leftValue']
+            return np.array([self._events[i]['topValue'], self._events[i]['rightValue'], self._events[i]['bottomValue'], self._events[i]['leftValue'] ])
 
-        return 0,0,0,0
+        return np.array([0,0,0,0])
 
     def getLedStateFromFrame(self,frame):
         return self.getLedStateFromTime( frame / self.getFPS() )
@@ -120,10 +120,17 @@ class EuglenaData(object):
                 else:
                     newTrack = copy.deepcopy(t)
                     newTrack['samples'] =filter(lambda ss: startFrame <= (ss['frame']) <= endFrame, t['samples'] )
+                    frames = [ss['frame'] for ss in newTrack['samples']]
+                    newTrack["startFrame"] = np.min(frames)
+                    newTrack["lastFrame"] = np.max(frames)
+                    newTrack["numSamples"] = len(frames)
                     clippedTracks.append(newTrack)
             else:
                 newTrack = copy.deepcopy(t)
                 newTrack['samples'] = []
+                newTrack['startFrame'] = -1
+                newTrack['lastFrame'] = -1
+                newTrack['numSamples'] = 0
                 clippedTracks.append(newTrack)
 
         return clippedTracks
@@ -131,10 +138,10 @@ class EuglenaData(object):
     @staticmethod
     def extractTrackData(track):
         # returns x,y,w,h,a,f
-        return zip(*[(s['rect'][0], s['rect'][1], s['rect'][2], s['rect'][3], s['rect'][4], s['frame']) for s in track['samples'] ])
+        return np.array(zip(*[(s['rect'][0], s['rect'][1], s['rect'][2], s['rect'][3], s['rect'][4], s['frame']) for s in track['samples'] ]))
 
     def writeTrackDataToCSV(self,track,csvfile):
-        x,y,w,h,a,f = np.array(EuglenaData.extractTrackData(track))
+        x,y,w,h,a,f = EuglenaData.extractTrackData(track)
 
         x *= self.getUMPP()
         y *= self.getUMPP()
@@ -153,5 +160,4 @@ class EuglenaData(object):
             for i,r in enumerate(rows):
                 data = list(r)
                 data.extend(ledStates[i])
-                print(data)
                 wr.writerow(data)
