@@ -21,7 +21,10 @@ void help()
     cout << "   OPTIONS [OPTIONAL]:" << endl;
     cout << "        -o, --output <output>: Output json file, DEFAULT=traces.json" << endl;
     cout << "        -d, --debug          : Its only a flag that produces debug images and shows preview window" <<endl;
-    cout << "        -h, --help           : Prints this help screen" << endl << endl;
+    cout << "        -h, --help           : Prints this help screen" << endl;
+    cout << "        -tv, --tracked-video : Takes a folder as input argument -i and produces a tracked video and a tracks.json" << endl;
+    cout << "        -t, --treshold       : Treshold for tracks" << endl;
+    cout << "        -d, --dial           : Draws a dial for all experiments, not only for Live" << endl;
     cout << "   EXAMPLES:" << endl;
     cout << "         ./euglena -i movie.mp4 -z 4 -o traces.json -d" << endl;
     cout << "         This takes an input movie.mp4 file where the zoom level was 4 and the debug flag was set." <<endl;
@@ -174,13 +177,34 @@ std::string stringf(const std::string fmt_str, ...) {
     return std::string(formatted.get());
 }
 
-void annotateImage( cv::Mat &frame, const LED& state, int nFrame, double t, double zoom, int width, int height)
+void computeJoystickPositionFromLED( const LED& state, float &angle, float &r)
+{
+    float y = std::max(state.top,state.bottom);
+    
+    if (state.bottom < state.top)
+        y = -y;
+    
+    float x = max(state.right,state.left);
+    if (state.left > state.right)
+        x = -x;
+    
+    y = y / 100.0;
+    x = x / 100.0;
+    
+    angle = atan2(y,x);
+    if (angle < 0)
+        angle = 2*M_PI + angle;
+    
+    r =  sqrt( x*x + y*y);
+}
+
+void annotateImage( cv::Mat &frame, const LED& state, int nFrame, double t, double zoom, int width, int height, bool drawDial)
 {
     double w = 30.0 * zoom / 4.0;
     
     cv::line(frame, cv::Point2f(width-w-30,height-10),cv::Point2f(width-10,height-10),cv::Scalar(255,255,255,255),5 );
     
-    cv::putText(frame,"100um",cv::Point2f(width-w-40,height-20),cv::FONT_HERSHEY_COMPLEX,1.0,cv::Scalar(255,255,255,255),1,8);
+    cv::putText(frame,"100um",cv::Point2f(width-115,height-20),cv::FONT_HERSHEY_COMPLEX,1.0,cv::Scalar(255,255,255,255),1,8);
     
     std::string s = stringf("Frame %d ( t = ~%4.2fs)", nFrame, t);
     cv::putText(frame,s,cv::Point2f(10,20),cv::FONT_HERSHEY_COMPLEX,0.5,cv::Scalar(0,255,255,255),1,8);
@@ -196,7 +220,23 @@ void annotateImage( cv::Mat &frame, const LED& state, int nFrame, double t, doub
     
     s = stringf("%3d",state.left);
     cv::putText(frame,s,cv::Point2f(0,height/2),cv::FONT_HERSHEY_COMPLEX,1,cv::Scalar(0,255,255,255),1,8);
+    
+    if (drawDial){
+        const float thickness = 2;
+        const float DIAL_RAD = 80;
+        float c_x = 640-DIAL_RAD - DIAL_RAD/10 - thickness;
+        float c_y = DIAL_RAD + DIAL_RAD/10 + thickness;
 
+        
+        float angle, r;
+        computeJoystickPositionFromLED(state, angle, r);
+        float hand_x = DIAL_RAD * r * cos(angle) + c_x;
+        float hand_y = DIAL_RAD * r * sin(angle) + c_y;
+        
+        cv::circle(frame, cv::Point2f(c_x,c_y), DIAL_RAD, cv::Scalar(255,255,255,255),(int)thickness);
+        cv::circle(frame, cv::Point2f(hand_x,hand_y), DIAL_RAD/10, cv::Scalar(255,255,255,255),(int)thickness);
+        cv::line(frame, cv::Point2f(c_x,c_y), cv::Point2f(hand_x,hand_y), cv::Scalar(255,255,255,255),(int)thickness);
+    }
 }
 
 int processTrackedVideo(GetPot &cl, std::string &folder, int threshold )
@@ -219,6 +259,7 @@ int processTrackedVideo(GetPot &cl, std::string &folder, int threshold )
     jsonReader.parse(jsonString, jsonRoot);
     
     double magnification = jsonRoot["metaData"]["magnification"].asDouble();
+    bool drawDial =cl.search(2,"--dial","-d") || jsonRoot["metaData"]["expTypeString"] == "isLive";
     
     Json::Value eventsToRun = jsonRoot["eventsToRun"];
     
@@ -260,7 +301,7 @@ int processTrackedVideo(GetPot &cl, std::string &folder, int threshold )
         
         tracker.track(frame,nFrame);
         tracker.drawVis(frame,nFrame, threshold );
-        annotateImage(frame, state, nFrame, t/1000.0, magnification, width, height);
+        annotateImage(frame, state, nFrame, t/1000.0, magnification, width, height, drawDial);
         outVideo << frame;
         
         nFrame++;
