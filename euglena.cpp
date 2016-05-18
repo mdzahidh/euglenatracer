@@ -247,7 +247,7 @@ int processTrackedVideo(GetPot &cl, std::string &folder, int threshold )
  
     bool verbose = cl.search(2,"--verbose","-v");
     
-    std::string jsonFile = folder + "lightdata.json";
+    std::string jsonFile = folder + "lightdata_meta.json";
     std::string jsonString = readJSONFile(jsonFile);
     
     if (jsonString.length() == 0 )
