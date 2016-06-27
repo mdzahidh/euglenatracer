@@ -202,24 +202,60 @@ void annotateImage( cv::Mat &frame, const LED& state, int nFrame, double t, doub
 {
     double w = 30.0 * zoom / 4.0;
     
-    cv::line(frame, cv::Point2f(width-w-30,height-10),cv::Point2f(width-10,height-10),cv::Scalar(255,255,255,255),5 );
+//    cv::line(frame, cv::Point2f(width-w-30,height-10),cv::Point2f(width-10,height-10),cv::Scalar(255,255,255,255),5 );
     
-    cv::putText(frame,"100um",cv::Point2f(width-115,height-20),cv::FONT_HERSHEY_COMPLEX,1.0,cv::Scalar(255,255,255,255),1,8);
+//    cv::putText(frame,"100um",cv::Point2f(width-115,height-20),cv::FONT_HERSHEY_COMPLEX,1.0,cv::Scalar(255,255,255,255),1,8);
+    
+    const int ledLength = 200;
+    const int ledWidth  = 20;
+    const int ledMargin = 5;
+    
+    
+    
+    cv::line(frame, cv::Point2f(10,40),cv::Point2f(10+w,40),cv::Scalar(255,255,255,255),5 );
+    cv::putText(frame,"100um",cv::Point2f(10,70),cv::FONT_HERSHEY_COMPLEX,1.0,cv::Scalar(255,255,255,255),1,8);
     
     std::string s = stringf("Frame %d ( t = ~%4.2fs)", nFrame, t);
     cv::putText(frame,s,cv::Point2f(10,20),cv::FONT_HERSHEY_COMPLEX,0.5,cv::Scalar(0,255,255,255),1,8);
     
+    
+    cv::Rect roiRect = cv::Rect( (width - ledLength)/2, 40, ledLength, ledWidth );
+    cv::Mat  roiImage = frame( roiRect );
+    cv::Mat  ledImage = cv::Mat( roiRect.size(), CV_8UC3, cv::Scalar(0,255,255) );
+    float alpha = (state.top / 100.0) * 0.6;
+    cv::addWeighted(ledImage, alpha , roiImage, 1.0 - alpha, 0, roiImage);
+    
     s = stringf("%3d",state.top);
-    cv::putText(frame,s,cv::Point2f(width/2,30),cv::FONT_HERSHEY_COMPLEX,1,cv::Scalar(0,255,255,255),1,8);
+    cv::putText(frame,s,cv::Point2f(width/2-20,30),cv::FONT_HERSHEY_COMPLEX,1,cv::Scalar(0,255,255,255),1,8);
+    
+    
+    roiRect = cv::Rect( (width - 80 - ledMargin), (height-ledLength)/2, ledWidth, ledLength );
+    roiImage = frame( roiRect );
+    ledImage = cv::Mat( roiRect.size(), CV_8UC3, cv::Scalar(0,255,255) );
+    alpha = (state.right / 100.0) * 0.6;
+    cv::addWeighted(ledImage, alpha , roiImage, 1.0 - alpha, 0, roiImage);
     
     s = stringf("%3d",state.right);
     cv::putText(frame,s,cv::Point2f(width-60,height/2),cv::FONT_HERSHEY_COMPLEX,1,cv::Scalar(0,255,255,255),1,8);
     
+    roiRect = cv::Rect( (width - ledLength)/2, height - 80 - ledMargin, ledLength, ledWidth );
+    roiImage = frame( roiRect );
+    ledImage = cv::Mat( roiRect.size(), CV_8UC3, cv::Scalar(0,255,255) );
+    alpha = (state.bottom / 100.0) * 0.6;
+    cv::addWeighted(ledImage, alpha , roiImage, 1.0 - alpha, 0, roiImage);
+    
     s = stringf("%3d",state.bottom);
-    cv::putText(frame,s,cv::Point2f(width/2,height-20),cv::FONT_HERSHEY_COMPLEX,1,cv::Scalar(0,255,255,255),1,8);
+    cv::putText(frame,s,cv::Point2f(width/2-20,height-40),cv::FONT_HERSHEY_COMPLEX,1,cv::Scalar(0,255,255,255),1,8);
+    
+    roiRect = cv::Rect( (60 + ledMargin), (height-ledLength)/2, ledWidth, ledLength );
+    roiImage = frame( roiRect );
+    ledImage = cv::Mat( roiRect.size(), CV_8UC3, cv::Scalar(0,255,255) );
+    alpha = (state.left / 100.0) * 0.6;
+    cv::addWeighted(ledImage, alpha , roiImage, 1.0 - alpha, 0, roiImage);
     
     s = stringf("%3d",state.left);
     cv::putText(frame,s,cv::Point2f(0,height/2),cv::FONT_HERSHEY_COMPLEX,1,cv::Scalar(0,255,255,255),1,8);
+    
     
     if (drawDial){
         const float thickness = 2;
@@ -238,6 +274,7 @@ void annotateImage( cv::Mat &frame, const LED& state, int nFrame, double t, doub
         cv::line(frame, cv::Point2f(c_x,c_y), cv::Point2f(hand_x,hand_y), cv::Scalar(255,255,255,255),(int)thickness);
     }
 }
+
 
 int processTrackedVideo(GetPot &cl, std::string &folder, int threshold )
 {
@@ -302,6 +339,10 @@ int processTrackedVideo(GetPot &cl, std::string &folder, int threshold )
         tracker.track(frame,nFrame);
         tracker.drawVis(frame,nFrame, threshold );
         annotateImage(frame, state, nFrame, t/1000.0, magnification, width, height, drawDial);
+        
+//        cv::imshow("image",frame);
+//        cv::waitKey(1);
+//        
         outVideo << frame;
         
         nFrame++;
