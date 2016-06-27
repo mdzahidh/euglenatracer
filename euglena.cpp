@@ -206,62 +206,68 @@ void annotateImage( cv::Mat &frame, const LED& state, int nFrame, double t, doub
     
 //    cv::putText(frame,"100um",cv::Point2f(width-115,height-20),cv::FONT_HERSHEY_COMPLEX,1.0,cv::Scalar(255,255,255,255),1,8);
     
-    const int ledLength = 200;
-    const int ledWidth  = 20;
-    const int ledMargin = 5;
-    
-    
-    
-    cv::line(frame, cv::Point2f(10,40),cv::Point2f(10+w,40),cv::Scalar(255,255,255,255),5 );
-    cv::putText(frame,"100um",cv::Point2f(10,70),cv::FONT_HERSHEY_COMPLEX,1.0,cv::Scalar(255,255,255,255),1,8);
-    
+    const int ledHLength = 640;
+    const int ledVLength = 480;
+    const int ledWidth  = 40;
+    const int ledMargin = 0;
+    const float alphaMult = 0.8;
+    const float ledFontSize = 0.5;
+    const cv::Scalar ledFontColor(0,0,0,1.0);
+    const int ledFont = cv::FONT_HERSHEY_COMPLEX;
+    const int lineType = CV_AA;
+
     std::string s = stringf("Frame %d ( t = ~%4.2fs)", nFrame, t);
-    cv::putText(frame,s,cv::Point2f(10,20),cv::FONT_HERSHEY_COMPLEX,0.5,cv::Scalar(0,255,255,255),1,8);
-    
-    
-    cv::Rect roiRect = cv::Rect( (width - ledLength)/2, 40, ledLength, ledWidth );
+    cv::putText(frame,s,cv::Point2f(ledWidth,ledWidth+20),cv::FONT_HERSHEY_COMPLEX,0.5,cv::Scalar(0,255,255,255),1,lineType);
+
+    cv::line(frame, cv::Point2f(width-ledWidth-w-20,height-ledWidth-25-20),cv::Point2f(width-ledWidth-20,height-ledWidth-25-20),cv::Scalar(255,255,255,255), 5,1 );
+    cv::putText(frame,"100um",cv::Point2f(width-ledWidth-w-10,height-ledWidth-5-20),ledFont,0.5,cv::Scalar(255,255,255,255),1,lineType);
+
+    cv::Rect roiRect = cv::Rect( (width - ledHLength)/2, ledMargin, ledHLength, ledWidth );
     cv::Mat  roiImage = frame( roiRect );
     cv::Mat  ledImage = cv::Mat( roiRect.size(), CV_8UC3, cv::Scalar(0,255,255) );
-    float alpha = (state.top / 100.0) * 0.6;
+    float alpha = (state.top / 100.0) * alphaMult;
     cv::addWeighted(ledImage, alpha , roiImage, 1.0 - alpha, 0, roiImage);
     
     s = stringf("%3d",state.top);
-    cv::putText(frame,s,cv::Point2f(width/2-20,30),cv::FONT_HERSHEY_COMPLEX,1,cv::Scalar(0,255,255,255),1,8);
+    cv::putText(frame,s,cv::Point2f(width/2-20,ledWidth-10),ledFont,ledFontSize,ledFontColor,1,lineType);
     
     
-    roiRect = cv::Rect( (width - 80 - ledMargin), (height-ledLength)/2, ledWidth, ledLength );
+    //roiRect = cv::Rect( (width - 80 - ledMargin), (height-ledLength)/2, ledWidth, ledLength );
+    roiRect = cv::Rect( (width - ledWidth - ledMargin), (height-ledVLength)/2, ledWidth, ledVLength );
     roiImage = frame( roiRect );
     ledImage = cv::Mat( roiRect.size(), CV_8UC3, cv::Scalar(0,255,255) );
-    alpha = (state.right / 100.0) * 0.6;
+    alpha = (state.right / 100.0) * alphaMult;
     cv::addWeighted(ledImage, alpha , roiImage, 1.0 - alpha, 0, roiImage);
     
     s = stringf("%3d",state.right);
-    cv::putText(frame,s,cv::Point2f(width-60,height/2),cv::FONT_HERSHEY_COMPLEX,1,cv::Scalar(0,255,255,255),1,8);
+    cv::putText(frame,s,cv::Point2f(width-ledWidth,height/2),ledFont,ledFontSize,ledFontColor,1,lineType);
     
-    roiRect = cv::Rect( (width - ledLength)/2, height - 80 - ledMargin, ledLength, ledWidth );
+    //roiRect = cv::Rect( (width - ledLength)/2, height - 80 - ledMargin, ledLength, ledWidth );
+    roiRect = cv::Rect( (width - ledHLength)/2, height - ledWidth - ledMargin-20, ledHLength, ledWidth + ledMargin + 20 );
     roiImage = frame( roiRect );
     ledImage = cv::Mat( roiRect.size(), CV_8UC3, cv::Scalar(0,255,255) );
-    alpha = (state.bottom / 100.0) * 0.6;
+    alpha = (state.bottom / 100.0) * alphaMult;
     cv::addWeighted(ledImage, alpha , roiImage, 1.0 - alpha, 0, roiImage);
     
     s = stringf("%3d",state.bottom);
-    cv::putText(frame,s,cv::Point2f(width/2-20,height-40),cv::FONT_HERSHEY_COMPLEX,1,cv::Scalar(0,255,255,255),1,8);
+    cv::putText(frame,s,cv::Point2f(width/2-20,height-15-20),ledFont,ledFontSize,ledFontColor,1,lineType);
     
-    roiRect = cv::Rect( (60 + ledMargin), (height-ledLength)/2, ledWidth, ledLength );
+    //roiRect = cv::Rect( (60 + ledMargin), (height-ledLength)/2, ledWidth, ledLength );
+    roiRect = cv::Rect( ledMargin, (height-ledVLength)/2, ledWidth, ledVLength );
     roiImage = frame( roiRect );
     ledImage = cv::Mat( roiRect.size(), CV_8UC3, cv::Scalar(0,255,255) );
-    alpha = (state.left / 100.0) * 0.6;
+    alpha = (state.left / 100.0) * alphaMult;
     cv::addWeighted(ledImage, alpha , roiImage, 1.0 - alpha, 0, roiImage);
     
     s = stringf("%3d",state.left);
-    cv::putText(frame,s,cv::Point2f(0,height/2),cv::FONT_HERSHEY_COMPLEX,1,cv::Scalar(0,255,255,255),1,8);
+    cv::putText(frame,s,cv::Point2f(0,height/2),ledFont,0.5,ledFontColor,1,lineType);
     
     
     if (drawDial){
         const float thickness = 2;
-        const float DIAL_RAD = 80;
-        float c_x = 640-DIAL_RAD - DIAL_RAD/10 - thickness;
-        float c_y = DIAL_RAD + DIAL_RAD/10 + thickness;
+        const float DIAL_RAD = 60;
+        float c_x = 640-DIAL_RAD - DIAL_RAD/10 - thickness - ledWidth;
+        float c_y = DIAL_RAD + DIAL_RAD/10 + thickness + ledWidth;
 
         
         float angle, r;
@@ -269,9 +275,9 @@ void annotateImage( cv::Mat &frame, const LED& state, int nFrame, double t, doub
         float hand_x = DIAL_RAD * r * cos(angle) + c_x;
         float hand_y = DIAL_RAD * r * sin(angle) + c_y;
         
-        cv::circle(frame, cv::Point2f(c_x,c_y), DIAL_RAD, cv::Scalar(255,255,255,255),(int)thickness);
-        cv::circle(frame, cv::Point2f(hand_x,hand_y), DIAL_RAD/10, cv::Scalar(255,255,255,255),(int)thickness);
-        cv::line(frame, cv::Point2f(c_x,c_y), cv::Point2f(hand_x,hand_y), cv::Scalar(255,255,255,255),(int)thickness);
+        cv::circle(frame, cv::Point2f(c_x,c_y), DIAL_RAD, cv::Scalar(255,255,255,255),(int)thickness,lineType);
+        cv::circle(frame, cv::Point2f(hand_x,hand_y), DIAL_RAD/10, cv::Scalar(255,255,255,255),(int)thickness,lineType);
+        cv::line(frame, cv::Point2f(c_x,c_y), cv::Point2f(hand_x,hand_y), cv::Scalar(255,255,255,255),(int)thickness,lineType);
     }
 }
 

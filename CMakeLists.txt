@@ -63,8 +63,6 @@ if(UNIX)
   endforeach()
 endif()
 
-link_directories("C:/src/euglenalab/game/detection/local/lib")
-
 if (OPENCV_FOUND)
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenCV_INCLUDE_DIRS}")
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenCV_INCLUDE_DIRS}")
@@ -80,7 +78,7 @@ if( NOT WIN32 )
     endif()
     SET(EXTRA_LIBS "-lavresample -lswscale -lavformat -lavcodec -lswresample -lavutil")
 elseif(WIN32)
-
+    link_directories("C:/src/euglenalab/game/detection/local/lib")
 endif()
 
 IF(APPLE)
