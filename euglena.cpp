@@ -219,8 +219,8 @@ void annotateImage( cv::Mat &frame, const LED& state, int nFrame, double t, doub
     std::string s = stringf("Frame %d ( t = ~%4.2fs)", nFrame, t);
     cv::putText(frame,s,cv::Point2f(ledWidth,ledWidth+20),cv::FONT_HERSHEY_COMPLEX,0.5,cv::Scalar(0,255,255,255),1,lineType);
 
-    cv::line(frame, cv::Point2f(width-ledWidth-w-20,height-ledWidth-25-20),cv::Point2f(width-ledWidth-20,height-ledWidth-25-20),cv::Scalar(255,255,255,255), 5,1 );
-    cv::putText(frame,"100um",cv::Point2f(width-ledWidth-w-10,height-ledWidth-5-20),ledFont,0.5,cv::Scalar(255,255,255,255),1,lineType);
+    cv::line(frame, cv::Point2f(width-ledWidth-w-20,height-ledWidth-25-20),cv::Point2f(width-ledWidth-20,height-ledWidth-25-20),cv::Scalar(0,255,255,255), 5,1 );
+    cv::putText(frame,"100um",cv::Point2f(width-ledWidth-w-10,height-ledWidth-5-20),ledFont,0.5,cv::Scalar(0,0,0,255),1,lineType);
 
     cv::Rect roiRect = cv::Rect( (width - ledHLength)/2, ledMargin, ledHLength, ledWidth );
     cv::Mat  roiImage = frame( roiRect );
