@@ -493,8 +493,8 @@ public:
         // This is for OpenCV >= 3.0.0
         _fgbg = cv::createBackgroundSubtractorMOG2();
 #endif
-        _elementErode  = getStructuringElement( cv::MORPH_ELLIPSE, cv::Size( 3, 3 ) );
-        _elementDilate = getStructuringElement( cv::MORPH_ELLIPSE, cv::Size( 5, 5 ));
+//        _elementErode  = getStructuringElement( cv::MORPH_ELLIPSE, cv::Size( 3, 3 ) );
+//        _elementDilate = getStructuringElement( cv::MORPH_ELLIPSE, cv::Size( 5, 5 ));
         setZoom(10.0f);
     }
 
@@ -503,6 +503,12 @@ public:
         _zoom = zoom;
         _lengthScaleFactor = zoom / 10.0f;
         _areaScaleFactor = _lengthScaleFactor * _lengthScaleFactor;
+
+        int erodeFilterSize =  (int) round(3.0*_lengthScaleFactor);
+        int dilateFilterSize = (int) round(5.0*_lengthScaleFactor);
+
+        _elementErode  = getStructuringElement( cv::MORPH_ELLIPSE, cv::Size( erodeFilterSize, erodeFilterSize ));
+        _elementDilate = getStructuringElement( cv::MORPH_ELLIPSE, cv::Size( dilateFilterSize, dilateFilterSize ));
     }
 
     void filterGoodEuglenas(std::vector<Euglena> &euglenas)

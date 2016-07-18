@@ -356,7 +356,9 @@ int processTrackedVideo(GetPot &cl, std::string &folder, int threshold )
         if( verbose ){
             printf("Grabbing Frame: %d (Dead: %ld, Live: %ld)\n", nFrame, tracker._trackMgr.getDeadTracks().size(), tracker._trackMgr.getLiveTracks().size());
         }
+#if 0
         progressBar( nFrame / totalFrames );
+#endif
     }
     tracker._trackMgr.writeToJSONFile(folder+"tracks.json", threshold);
     return 0;

@@ -186,13 +186,16 @@ void EuglenaTracker::detectEuglena(const cv::Mat &im, std::vector<Euglena>  &eug
     cv::Mat gray;
     cv::Mat grayN;
     cv::cvtColor(im,gray,CV_BGR2GRAY);
-    cv::normalize(gray,grayN,0,255,cv::NORM_MINMAX);
+    //cv::normalize(gray,grayN,0,255,cv::NORM_MINMAX);
+    cv::equalizeHist(gray,grayN);
+
+    //cv::normalize(gray,grayN,255,255,cv::NORM_L2);
 
 #if defined(CV_VERSION_EPOCH) && (CV_VERSION_EPOCH < 3)
     (*_fgbg)(grayN,fgmask,-1);
 #else
         // For OpenCV >= 3.0.0
-    _fgbg->apply(im,fgmask,-1);
+    _fgbg->apply(grayN,fgmask,-1);
 #endif
 
     cv::Mat dst;
@@ -201,6 +204,18 @@ void EuglenaTracker::detectEuglena(const cv::Mat &im, std::vector<Euglena>  &eug
     cv::morphologyEx( fgmask, fgmask, cv::MORPH_ERODE,  _elementErode );
     cv::morphologyEx( fgmask, fgmask, cv::MORPH_DILATE, _elementDilate );
 
+    static int count = 0;
+
+#if 0
+    char buffer[128];
+    sprintf(buffer,"%05d_mask.jpg",count);
+    cv::imwrite(buffer,fgmask);
+
+    sprintf(buffer,"%05d_gray.jpg",count);
+    cv::imwrite(buffer,grayN);
+
+    count ++;
+#endif
 
     std::vector<std::vector<cv::Point> > contours;
     cv::findContours( fgmask, contours,
