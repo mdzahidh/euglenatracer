@@ -289,6 +289,7 @@ int processTrackedVideo(GetPot &cl, std::string &folder, int threshold )
     }
  
     bool verbose = cl.search(2,"--verbose","-v");
+    bool debug = cl.search(2,"--debug","-d");
     
     std::string jsonFile = folder + "lightdata_meta.json";
     std::string jsonString = readJSONFile(jsonFile);
@@ -346,9 +347,15 @@ int processTrackedVideo(GetPot &cl, std::string &folder, int threshold )
         tracker.drawVis(frame,nFrame, threshold );
         annotateImage(frame, state, nFrame, t/1000.0, magnification, width, height, drawDial);
         
+        if( debug ){
+            char buffer[128];
+            sprintf(buffer,"%05d.jpg",nFrame);
+            cv::imwrite(buffer,frame);
+        }
+        
 //        cv::imshow("image",frame);
 //        cv::waitKey(1);
-//        
+//
         outVideo << frame;
         
         nFrame++;

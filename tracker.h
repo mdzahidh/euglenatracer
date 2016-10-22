@@ -64,12 +64,12 @@ public:
     float distanceSq( const State& other ) const
     {
         cv::Mat weight = cv::Mat::ones(DIMENSION,1,CV_32F);
-        weight.at<float>(0,1) = 10.0 / _size.x;
-        weight.at<float>(1,1) = 10.0 / _size.y;
-        weight.at<float>(2,1) = 20.0 / _size.x;
-        weight.at<float>(3,1) = 20.0 / _size.y;
-        weight.at<float>(4,1) = 50.0 / _size.x;
-        weight.at<float>(5,1) = 50.0 / _size.y;
+        weight.at<float>(0,0) = 10.0 / _size.x;
+        weight.at<float>(1,0) = 10.0 / _size.y;
+        weight.at<float>(2,0) = 20.0 / _size.x;
+        weight.at<float>(3,0) = 20.0 / _size.y;
+        weight.at<float>(4,0) = 50.0 / _size.x;
+        weight.at<float>(5,0) = 50.0 / _size.y;
         cv::Mat diff = other.toMatrix() - toMatrix();
         return diff.mul(weight).dot(diff);
     }
@@ -524,6 +524,8 @@ public:
                 goodEuglenas.push_back( e );
             }
         }
+
+//        printf("Good euglenas: %d\n",goodEuglenas.size());
         euglenas = goodEuglenas;
     }
     void track(const cv::Mat &im, int frameN)

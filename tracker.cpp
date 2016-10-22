@@ -148,11 +148,11 @@ void TrackManager::track( std::vector<Euglena> &euglenas, int frame, float lengt
         }
 
         // for(auto eugId: orphanEuglena ){
-        for( size_t i=0;i<orphanEuglena.size();i++){
-            auto &eugId = orphanEuglena[i];
-            Euglena &euglena = assignableEuglenas[eugId];
-            _liveTracks.push_back( Track( euglena._rect, frame, State(euglena._rect) ) );
-        }
+//        for( size_t i=0;i<orphanEuglena.size();i++){
+//            auto &eugId = orphanEuglena[i];
+//            Euglena &euglena = assignableEuglenas[eugId];
+//            _liveTracks.push_back( Track( euglena._rect, frame, State(euglena._rect) ) );
+//        }
     }
 
     // Filter liveTracks
@@ -172,6 +172,7 @@ void TrackManager::track( std::vector<Euglena> &euglenas, int frame, float lengt
 
     _liveTracks = newLiveTracks;
 
+//    printf("Number of unassigned euglenas: %d\n",unassignedEuglenas.size());
     // for(auto &eug: unassignedEuglenas){
     for( size_t i=0;i<unassignedEuglenas.size();i++){
         auto &eug = unassignedEuglenas[i];
@@ -179,6 +180,42 @@ void TrackManager::track( std::vector<Euglena> &euglenas, int frame, float lengt
     }
 }
 
+void histogramStretch( const cv::Mat &im, cv::Mat &out)
+{
+    int hist[256] = {0};
+    int total = 0;
+    for(int h=0;h<im.rows;h++){
+        for(int w=0;w<im.cols;w++){
+            hist[ im.at<unsigned char>(h,w) ] ++;
+            total ++;
+        }
+    }
+    int firstN = int(total * 0.005 + 0.5);
+    int lastN  = int(total * 0.995 + 0.5);
+    
+    int cumm = 0;
+    float first = 0;
+    float last = 255;
+    for(int i=0;i<256;i++){
+        cumm += hist[i];
+        if (cumm < firstN){
+            first = i;
+        }
+        
+        if( cumm < lastN){
+            last = i;
+        }
+    }
+    
+    out = im.clone();
+    float diff = last - first;
+    for(int h=0;h<im.rows;h++){
+        for(int w=0;w<im.cols;w++){
+            int v = (int)std::min(255.0,std::max(0.0, std::round( 255.0 * ((float)out.at<unsigned char>(h,w) - first) / diff ) ));
+            out.at<unsigned char>(h,w) = v;
+        }
+    }
+}
 
 void EuglenaTracker::detectEuglena(const cv::Mat &im, std::vector<Euglena>  &euglenas)
 {
@@ -187,10 +224,18 @@ void EuglenaTracker::detectEuglena(const cv::Mat &im, std::vector<Euglena>  &eug
     cv::Mat grayN;
     cv::cvtColor(im,gray,CV_BGR2GRAY);
     //cv::normalize(gray,grayN,0,255,cv::NORM_MINMAX);
-    cv::equalizeHist(gray,grayN);
+    
+    histogramStretch(gray,grayN);
+    
+//    cv::equalizeHist(gray,grayN);
 
-    //cv::normalize(gray,grayN,255,255,cv::NORM_L2);
-
+//    cv::normalize(gray/255.0,grayN,0,1,cv::NORM_L2,CV_8UC1);
+//    grayN = grayN * 255.0;
+//    cv::imshow("grayN",grayN);
+//    cv::waitKey(1);
+    
+//    grayN = gray;
+    
 #if defined(CV_VERSION_EPOCH) && (CV_VERSION_EPOCH < 3)
     (*_fgbg)(grayN,fgmask,-1);
 #else
@@ -208,10 +253,13 @@ void EuglenaTracker::detectEuglena(const cv::Mat &im, std::vector<Euglena>  &eug
 
 #if 0
     char buffer[128];
-    sprintf(buffer,"%05d_mask.jpg",count);
+    sprintf(buffer,"tmp/%05d_mask.jpg",count);
     cv::imwrite(buffer,fgmask);
-
-    sprintf(buffer,"%05d_gray.jpg",count);
+    
+    sprintf(buffer,"tmp/%05d_gray.jpg",count);
+    cv::imwrite(buffer,gray);
+    
+    sprintf(buffer,"tmp/%05d_grayN.jpg",count);
     cv::imwrite(buffer,grayN);
 
     count ++;
