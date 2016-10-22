@@ -225,9 +225,9 @@ void EuglenaTracker::detectEuglena(const cv::Mat &im, std::vector<Euglena>  &eug
     cv::cvtColor(im,gray,CV_BGR2GRAY);
     //cv::normalize(gray,grayN,0,255,cv::NORM_MINMAX);
     
-    histogramStretch(gray,grayN);
+//    histogramStretch(gray,grayN);
     
-//    cv::equalizeHist(gray,grayN);
+    cv::equalizeHist(gray,grayN);
 
 //    cv::normalize(gray/255.0,grayN,0,1,cv::NORM_L2,CV_8UC1);
 //    grayN = grayN * 255.0;
