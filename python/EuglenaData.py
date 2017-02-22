@@ -18,7 +18,11 @@ class EuglenaData(object):
         with open(path+"lightdata.json") as fp:
             self._lightData = json.load(fp)
 
-        with open(path+"tracks.json") as fp:
+        with open(path+"lightdata_meta.json") as fp:
+            self._lightDataMeta = json.load(fp)
+
+
+	with open(path+"tracks.json") as fp:
             self._tracks = json.load(fp)
 
         ## Converting all frame numbers from 1 to N
@@ -29,7 +33,7 @@ class EuglenaData(object):
             for j in xrange(len(samples)):
                 samples[j]['frame'] += 1
 
-        self._zoom = self._lightData['metaData']['magnification']
+        self._zoom = self._lightDataMeta['metaData']['magnification']
         self._events = self._lightData['eventsToRun']
         baseTime = self._events[0]['time']
         for i in xrange(len(self._events)):
@@ -46,8 +50,8 @@ class EuglenaData(object):
         return len(self._tracks)
 
     def getNumFrames(self):
-        if "numFrames" in self._lightData['metaData']:
-            return self._lightData['metaData']['numFrames']
+        if "numFrames" in self._lightDataMeta['metaData']:
+            return self._lightDataMeta['metaData']['numFrames']
         else:
             warning("Use newer version of data, numFrames information doesn't exists")
             return 0;
