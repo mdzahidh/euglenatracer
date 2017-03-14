@@ -22,8 +22,8 @@ void AssignmentProblemGreedy::solve(std::vector< std::pair<int,int> > &assignmen
         cv::Point minLoc;
         double minVal,maxVal;
         cv::minMaxLoc(M,&minVal,&maxVal,&minLoc);
-        M.row(minLoc.y) = cv::Mat::ones(1,M.cols,M.type()) * 1e10;
-        M.col(minLoc.x) = cv::Mat::ones(M.rows,1,M.type()) * 1e10;
+        M.row(minLoc.y) = cv::Mat::ones(1,M.cols,M.type()) * std::numeric_limits<float>::max();
+        M.col(minLoc.x) = cv::Mat::ones(M.rows,1,M.type()) * std::numeric_limits<float>::max();
 
         if( minVal < _costThreshold ){
             assignments.push_back( std::pair<int,int>(minLoc.y,minLoc.x) );
@@ -77,8 +77,148 @@ void AssignmentProblemHungarian::solve(std::vector< std::pair<int,int> > &assign
 }
 #endif
 
+struct Bucket{
+    std::vector<int> _trackIds;
+    std::vector<int> _euglenaIds;
+    void addTrackId(int i){ _trackIds.push_back(i);}
+    void addEuglenaId(int i){ _euglenaIds.push_back(i);}
+};
+
+class BucketGrid{
+    Bucket *_pGrid;
+    int    _N;
+    int    _M;
+public:
+    BucketGrid(int N,int M): _N(N), _M(M){
+        _pGrid = new Bucket[N*M];
+    }
+    
+    BucketGrid( const BucketGrid & other )
+    {
+        _N = other._N;
+        _M = other._M;
+        _pGrid = new Bucket[_N*_M];
+        for(int i=0;i<_N*_M;i++){
+            _pGrid[i] = other._pGrid[i];
+        }
+    }
+    BucketGrid( BucketGrid && other )
+    {
+        _pGrid = other._pGrid;
+        other._pGrid = nullptr;
+    }
+    virtual ~BucketGrid()
+    {
+        if( _pGrid ){
+            delete [] _pGrid;
+        }
+    }
+    
+    Bucket& operator()(int i,int j)
+    {
+        return _pGrid[ i*_M + j];
+    }
+};
+
+void TrackManager::track( std::vector<Euglena> &euglenas, int frame, float lengthScaleFactor, float gridXFactor, float gridYFactor)
+{
+    
+    int ROWS = std::round(8.0 * gridYFactor / lengthScaleFactor);
+    int COLS = std::round(10.0 * gridXFactor / lengthScaleFactor);
+
+    for( size_t i=0;i<_liveTracks.size();i++){
+        auto &t = _liveTracks[i];
+        t.predict();
+    }
+    
+    BucketGrid grid(ROWS,COLS);
+    float  w = 640.0 / COLS;
+    float  h = 480.0 / ROWS;
+    for(int i=0;i<euglenas.size();i++){
+        const cv::Point2f& center = euglenas[i]._rect.center;
+        int r = std::min((int)std::floor(center.y / h),ROWS-1);
+        int c = std::min((int)std::floor(center.y / w), COLS-1);
+        grid(r,c).addEuglenaId(i);
+    }
+    
+    for(int i=0;i<_liveTracks.size();i++){
+        const cv::Point2f& center = _liveTracks[i].getPredictedPosition().center;
+        int r = std::min((int)std::floor(center.y / h),ROWS-1);
+        int c = std::min((int)std::floor(center.y / w), COLS-1);
+        grid(r,c).addTrackId(i);
+    }
+    
+    size_t nT = _liveTracks.size();
+    size_t nE = euglenas.size();
+    AssignmentProblemGreedy assignmentProblem(nT,nE, lengthScaleFactor *lengthScaleFactor * 1000.0);
+    
+//    #pragma omp parallel for
+    for(int r=0;r<ROWS;++r){
+        for(int c=0;c<COLS;++c){
+            for(int t:grid(r,c)._trackIds){
+                for(int delr=-1;delr<2;delr++){
+                    for(int delc=-1;delc<2;delc++){
+                        int rr = r + delr;
+                        int cc = c + delc;
+                        if( (rr >= 0) && (rr < ROWS) && (cc >= 0) && (cc < COLS) ){
+                                for(int e:grid(rr,cc)._euglenaIds){
+                                    assignmentProblem(t,e) =  distanceSq( euglenas[e], _liveTracks[t], frame );                                
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    std::vector< std::pair<int, int> > assignments;
+    std::vector< int > orphanTracks;
+    std::vector< int > orphanEuglena;
+    
+    assignmentProblem.solve(assignments,orphanTracks,orphanEuglena);
+    
+    for( size_t i=0;i<assignments.size();i++){
+        auto &assignment = assignments[i];
+        
+        int trackId = assignment.first;
+        int eugId   = assignment.second;
+        _liveTracks[trackId].assign( euglenas[eugId]._rect, frame );
+    }
+
+    
+    for( size_t i=0;i<orphanTracks.size();i++){
+        auto &trackId = orphanTracks[i];
+        _liveTracks[trackId].notAssign();
+    }
+    
+    // Filter liveTracks
+    std::vector<Track> newLiveTracks;
+    // for(auto track: _liveTracks){
+    for( size_t i=0;i<_liveTracks.size();i++){
+        auto &track = _liveTracks[i];
+        
+        if( track.getIdleCounter() < IDLE_THRESHOLD )
+            newLiveTracks.push_back( track );
+        else{
+#ifndef EUGLENA_LIVE
+            _deadTracks.push_back(track);
+#endif
+        }
+    }
+    
+    _liveTracks = newLiveTracks;
+    
+    for( size_t i=0;i<orphanEuglena.size();i++){
+        auto &eugId = orphanEuglena[i];
+        Euglena &euglena = euglenas[eugId];
+        _liveTracks.push_back( Track( euglena._rect, frame, State(euglena._rect) ) );
+    }
+    
+//    printf("Number of live tracks %d\n",_liveTracks.size());
+}
+
 ///////////////////////////////////////////////////////////////////////
-void TrackManager::track( std::vector<Euglena> &euglenas, int frame, float lengthScaleFactor)
+void TrackManager::track2( std::vector<Euglena> &euglenas, int frame, float lengthScaleFactor,float gridXFactor, float gridYFactor)
 {
 //    for(auto &t: _liveTracks){
     for( size_t i=0;i<_liveTracks.size();i++){

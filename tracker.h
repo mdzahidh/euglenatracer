@@ -109,7 +109,7 @@ protected:
     int     _numEuglena;
 public:
     virtual void init(int numTracks, int numEuglenas) = 0;
-    virtual double& operator()(int i,int j) = 0;
+    virtual float& operator()(int i,int j) = 0;
     virtual void printCostMatrix() const = 0;
     virtual void solve(std::vector< std::pair<int,int> > &assignments, std::vector<int> &unassignedTracks, std::vector<int> &unassignedEuglena)  = 0;
 };
@@ -126,18 +126,22 @@ public:
     }
     virtual void init(int numTracks, int numEuglenas)
     {
-        _costMatrix = cv::Mat::zeros(numTracks,numEuglenas,CV_64F);
+//        _costMatrix = cv::Mat::zeros(numTracks,numEuglenas,CV_64F);
+//        _costMatrix = cv::Mat::ones(numTracks,numEuglenas,CV_32F) * 1e10;
+        //_costMatrix = cv::Mat::ones(numTracks,numEuglenas,CV_32F) * 1e7;
+        _costMatrix = cv::Mat::ones(numTracks,numEuglenas,CV_32F) * std::numeric_limits<float>::max();
     }
 
-    virtual double& operator()(int i,int j)
+    virtual float& operator()(int i,int j)
     {
-        return _costMatrix.at<double>(i,j);
+        //return _costMatrix.at<double>(i,j);
+        return _costMatrix.at<float>(i,j);
     }
     void printMatrix(const cv::Mat& M) const
     {
         for(int i=0;i<M.rows;i++){
             for(int j=0;j<M.cols;j++){
-                printf("%010.3f, ",_costMatrix.at<double>(i,j));
+                printf("%010.3f, ",_costMatrix.at<float>(i,j));
             }
             printf("\n");
         }
@@ -423,8 +427,8 @@ public:
     {
         Track::_trackCount = 0;
     }
-
-    void track( std::vector<Euglena> &euglenas, int frame, float lengthScaleFactor );
+    void track2( std::vector<Euglena> &euglenas, int frame, float lengthScaleFactor, float gridXFactor, float gridYFactor );
+    void track( std::vector<Euglena> &euglenas, int frame, float lengthScaleFactor, float gridXFactor, float gridYFactor );
 
     void toJSONString( std::string &output, int threshold )
     {
@@ -481,7 +485,8 @@ public:
     float                               _zoom;
     float                               _lengthScaleFactor;
     float                               _areaScaleFactor;
-
+    float                               _gridXFactor;
+    float                               _gridYFactor;
     EuglenaTracker()
     {
 
@@ -496,6 +501,7 @@ public:
 //        _elementErode  = getStructuringElement( cv::MORPH_ELLIPSE, cv::Size( 3, 3 ) );
 //        _elementDilate = getStructuringElement( cv::MORPH_ELLIPSE, cv::Size( 5, 5 ));
         setZoom(10.0f);
+        setGridFactors(4, 4);
     }
 
     void setZoom(float zoom)
@@ -509,6 +515,12 @@ public:
 
         _elementErode  = getStructuringElement( cv::MORPH_ELLIPSE, cv::Size( erodeFilterSize, erodeFilterSize ));
         _elementDilate = getStructuringElement( cv::MORPH_ELLIPSE, cv::Size( dilateFilterSize, dilateFilterSize ));
+    }
+    
+    void setGridFactors(float xFactor, float yFactor)
+    {
+        _gridXFactor = xFactor;
+        _gridYFactor = yFactor;
     }
 
     void filterGoodEuglenas(std::vector<Euglena> &euglenas)
@@ -533,7 +545,7 @@ public:
         _euglenas.clear();
         detectEuglena(im, _euglenas);
         filterGoodEuglenas(_euglenas);
-        _trackMgr.track(_euglenas,frameN, _lengthScaleFactor);
+        _trackMgr.track(_euglenas,frameN, _lengthScaleFactor,_gridXFactor,_gridYFactor);
     }
 
     void drawVis(cv::Mat &out, int frameN, int threshold = 0 )

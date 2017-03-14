@@ -290,7 +290,8 @@ int processTrackedVideo(GetPot &cl, std::string &folder, int threshold )
  
     bool verbose = cl.search(2,"--verbose","-v");
     bool debug = cl.search(2,"--debug","-d");
-    
+    float gridFactor = cl.follow(4.0f,2,"--gridFactor","-g");
+                          
     std::string jsonFile = folder + "lightdata_meta.json";
     std::string jsonString = readJSONFile(jsonFile);
     
@@ -323,6 +324,7 @@ int processTrackedVideo(GetPot &cl, std::string &folder, int threshold )
     
     EuglenaTracker tracker;
     tracker.setZoom(magnification);
+    tracker.setGridFactors(gridFactor, gridFactor);
     cv::Mat frame;
     
     cv::Size S = cv::Size((int) cap.get(CV_CAP_PROP_FRAME_WIDTH),    // Acquire input size
