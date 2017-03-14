@@ -25,6 +25,7 @@ void help()
     cout << "        -tv, --tracked-video : Takes a folder as input argument -i and produces a tracked video and a tracks.json" << endl;
     cout << "        -t, --treshold       : Treshold for tracks" << endl;
     cout << "        -d, --dial           : Draws a dial for all experiments, not only for Live" << endl;
+    cout << "        -g, --gridFactor     : gridFactor * 10 blocks will be used in X direction (gridFactor * 8 for Y) to partition the video for optimization. Default value is 4." << endl;
     cout << "   EXAMPLES:" << endl;
     cout << "         ./euglena -i movie.mp4 -z 4 -o traces.json -d" << endl;
     cout << "         This takes an input movie.mp4 file where the zoom level was 4 and the debug flag was set." <<endl;
@@ -76,6 +77,7 @@ int processJSON(GetPot &cl, std::string &fname, int treshhold)
     const string output = cl.follow("traces.json",2,"--out","-o");
     bool debug = cl.search(2,"--debug","-d");
     bool verbose = cl.search(2,"--verbose","-v");
+    float gridFactor = cl.follow(4.0f,2,"--gridFactor","-g");
     
     cv::VideoCapture cap(fname);
     cv::Mat frame;
@@ -85,6 +87,7 @@ int processJSON(GetPot &cl, std::string &fname, int treshhold)
     
     EuglenaTracker tracker;
     tracker.setZoom(zoom);
+    tracker.setGridFactors(gridFactor, gridFactor);
     
     double totalFrames = cap.get(cv::CAP_PROP_FRAME_COUNT);
     int frameN = 0;
